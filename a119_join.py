@@ -37,7 +37,7 @@ class VideoFile:
 
 
 def print_group(i, gr):
-    print 'Group %s [%d files]: %s \tTO %s \t(%d min)\t' % (i, len(gr), gr[0].str_date(), gr[-1].str_date(), (gr[-1].date - gr[0].date).total_seconds() / 60, )
+    print('Group %s [%d files]: %s \tTO %s \t(%d min)\t' % (i, len(gr), gr[0].str_date(), gr[-1].str_date(), (gr[-1].date - gr[0].date).total_seconds() / 60, ))
 
 
 # read gps data, filtering the unusable data
@@ -45,7 +45,7 @@ def read_group_gps(gr):
     full_gpx = []
     for fi in gr:
         full_gpx = full_gpx + fi.read_gps()
-    return filter(None, full_gpx)
+    return [_f for _f in full_gpx if _f]
 
 
 def extract_day_group(groups, target_date):
@@ -121,11 +121,11 @@ def main():
         if args.g:
             selected_index = [args.g]
         else:
-            selected_index = range(0, len(groups))
+            selected_index = list(range(0, len(groups)))
 
         if args.d:
             # todo: implement
-            print "Day selection is not supported yet."
+            print("Day selection is not supported yet.")
             return
 
         for i in selected_index:
@@ -133,17 +133,17 @@ def main():
 
             group_gpx = read_group_gps(selected_group)
 
-            print str(len(group_gpx)) + " GPS points found"
+            print(str(len(group_gpx)) + " GPS points found")
             if len(group_gpx) > 0 :
                 gpx_file_content = nvtk_mp42gpx.get_gpx(group_gpx, selected_group[0])
 
                 out_file = join(args.out, selected_group[0].mp4fileonly + '.gpx')
 
                 if isfile(out_file):
-                    print "File %s already exists" % (out_file,)
+                    print("File %s already exists" % (out_file,))
                 else:
                     with open(out_file, "w") as gpx_file:
-                        print("Writing '%s'" % out_file)
+                        print(("Writing '%s'" % out_file))
                         gpx_file.write(gpx_file_content)
 
     # Join files
@@ -157,10 +157,10 @@ def main():
                 out_file = join(args.out, group[0].mp4fileonly + '_join.mp4')
 
             if isfile(out_file):
-                print "File %s already exists" % (out_file,)
+                print("File %s already exists" % (out_file,))
             else:
                 with tempfile.NamedTemporaryFile(delete=False) as ffmpeg_filelist:
-                    print ffmpeg_filelist.name
+                    print(ffmpeg_filelist.name)
                     for g in group:
                         ffmpeg_filelist.write('file \'%s\'\r\n' % (g.mp4file,))
                     ffmpeg_filelist.flush()
@@ -169,7 +169,7 @@ def main():
                 command = '%s -y -safe 0 -f concat -i %s -c copy  %s' % (
                     ffmpeg, ffmpeg_filelist.name, out_file,)
 
-                print command
+                print(command)
                 subprocess.call(command, shell=True)
 
     # Join files in 8x timelapse
@@ -183,7 +183,7 @@ def main():
                 out_file = join(args.out, group[0].mp4fileonly + '_10x.mp4')
 
             if isfile(out_file):
-                print "File %s already exists" % (out_file,)
+                print("File %s already exists" % (out_file,))
             else:
                 with tempfile.NamedTemporaryFile(delete=False) as ffmpeg_filelist:
                     for g in group:
@@ -196,19 +196,19 @@ def main():
                 # timelapse 8x without sound
                 # command = '%s -y -safe 0 -f concat -i %s -filter:v \"setpts=PTS/8\" -an -threads 8 %s' % (ffmpeg, ffmpeg_filelist.name, out_file,)
 
-                print 'Running ' + command
+                print('Running ' + command)
 
                 child = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE)
                 processing = -1
                 line = ''
                 start_time = datetime.now()
-                print start_time
+                print(start_time)
 
                 # Monitors ffmpeg and tries to calculate the speed
                 while True:
                     out = child.stderr.read(1)
                     if out == '' and not child.poll() is None:
-                        print 'Finished ' + str(datetime.now())
+                        print('Finished ' + str(datetime.now()))
                         break
                     if out != '':
                         line += out
@@ -224,7 +224,7 @@ def main():
                                     estimate = 40*len(group)
                                 minutes = estimate/60
 
-                                print 'Processing %s (%d%% done, %d minutes left)' %(group[processing], processing*100/len(group), minutes)
+                                print('Processing %s (%d%% done, %d minutes left)' %(group[processing], processing*100/len(group), minutes))
                             else:
                                 # debug
                                 # sys.stdout.write(line)

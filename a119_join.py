@@ -15,7 +15,6 @@ ffmpeg = "ffmpeg"
 
 
 class VideoFile:
-
     def __init__(self, mp4, folder):
         self.mp4fileonly = mp4
         self.mp4file = join(folder, mp4)
@@ -171,6 +170,29 @@ def main():
 
                 print(command)
                 subprocess.call(command, shell=True)
+        else:
+            for group in groups:
+                if args.d:
+                    group = extract_day_group(groups, group[0].date)
+                    out_file = join(args.out, 'DAY_' + group[0].mp4fileonly + '_join.mp4')
+                else:
+                    out_file = join(args.out, group[0].mp4fileonly + '_join.mp4')
+
+                if isfile(out_file):
+                    print("File %s already exists" % (out_file,))
+                else:
+                    with tempfile.NamedTemporaryFile(delete=False) as ffmpeg_filelist:
+                        print(ffmpeg_filelist.name)
+                        for g in group:
+                            ffmpeg_filelist.write(('file \'%s\'\r\n' % (g.mp4file,)).encode())
+                        ffmpeg_filelist.flush()
+
+                    # ffmpeg -safe 0 -f concat -i 3.txt  -c copy 3.mp4
+                    command = '%s -y -safe 0 -f concat -i %s -c copy  %s' % (
+                        ffmpeg, ffmpeg_filelist.name, out_file,)
+
+                    print(command)
+                    subprocess.call(command, shell=True)
 
     # Join files in 8x timelapse
     if args.timelapse:
